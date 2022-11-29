@@ -25,6 +25,33 @@ citation: true
 bibliography: references.bib
 ---
 
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(fs)
+library(lubridate)
+library(tidyverse)
+library(skimr)
+```
+
+## Réimportation des données 
+
+```{r}
+
+
+df <- read_csv(file = path(base_path, "athlete_events.csv"))
+```
+
+```{r}
+skim(df)
+```
+
+## Données extrêmes
+
+```{r}
+
+ggplot()
+```
+
 ## Un peu d'interactivité pour le plaisir!
 
 ```{r map}
@@ -71,6 +98,6 @@ fig <- fig %>%
 fig
 ```
 
--------------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 À votre imagination de jouer!
