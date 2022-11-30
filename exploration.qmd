@@ -37,6 +37,17 @@ library(skimr)
 
 ```{r}
 
+URL <- "https://github.com/FAS1002/A22/raw/main/assets/fichiers/olympic_archive.zip"
+
+base_path <- path("data", "raw")
+
+fname <- paste(today(), "olympic-archive.zip", 
+               sep = "_")
+
+fpath <- path(base_path, fname)
+
+download.file(url = URL, 
+              destfile = fpath) 
 
 df <- read_csv(file = path(base_path, "athlete_events.csv"))
 ```
