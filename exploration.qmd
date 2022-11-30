@@ -33,7 +33,7 @@ library(tidyverse)
 library(skimr)
 ```
 
-## Réimportation des données 
+## Réimportation des données
 
 ```{r}
 
@@ -49,7 +49,62 @@ skim(df)
 
 ```{r}
 
-ggplot()
+p1 <- ggplot(data = df, 
+       mapping = aes(x = Age))
+p1 + geom_histogram()
+
+p1 + geom_histogram(color = "black", 
+                    fill = "#facade", 
+                    binwidth = 1)
+```
+
+```{r}
+x <- df %>% 
+    filter(Age >= 79) %>%
+    select(Name, Age, Team, Sex, Sport)
+
+```
+
+Age vs Sex
+
+```{r}
+p2 <- ggplot(data = df, 
+             mapping = aes(x = Sex, y = Age))
+
+p2 + geom_boxplot()
+
+
+```
+
+Évolution du ratio H:F
+
+```{r}
+
+evolution <- df %>% 
+    group_by(Year, Sex) %>%
+    summarise(n = n()) %>%
+    mutate(ratio = n / sum(n) * 100)
+
+
+```
+
+```{r}
+
+evolution_f <- evolution %>% filter(Sex == "F")
+evolution_m <- evolution %>% filter(Sex == "M")
+
+p3 <- ggplot(evolution_f, aes(x = Year, y = ratio)) + 
+    geom_line() +
+    geom_point()
+
+p4 <- ggplot(evolution_m, aes(x = Year, y = ratio)) + 
+    geom_line() +
+    geom_point()
+
+evolution_f <- as_tibble(evolution_f) %>% add_case(Year = 1896, Sex = "F", n = 0, ratio = 0) %>% arrange(Year)
+
+ggplot(evolution, aes(x = Year, y = ratio, color = Sex)) + 
+    geom_line()
 ```
 
 ## Un peu d'interactivité pour le plaisir!
