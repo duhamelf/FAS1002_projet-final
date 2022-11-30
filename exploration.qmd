@@ -107,6 +107,8 @@ ggplot(evolution, aes(x = Year, y = ratio, color = Sex)) +
     geom_line()
 ```
 
+kkk
+
 ## Un peu d'interactivité pour le plaisir!
 
 ```{r map}
