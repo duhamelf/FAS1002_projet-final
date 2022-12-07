@@ -43,36 +43,110 @@ library(fs)
 library(lubridate)
 library(tidyverse)
 library(skimr)
+library(gapminder)
 ```
 
 ```{r download, cache=TRUE}
 
-URL <- "https://github.com/FAS1002/A22/raw/main/assets/fichiers/olympic_archive.zip"
+#prax
+
+# URL <- "https://github.com/FAS1002/A22/raw/main/assets/fichiers/olympic_archive.zip"
+
+# base_path <- path("data", "raw")
+
+# fname <- paste(today(), "olympic-archive.zip", 
+  #             sep = "_")
+
+# fpath <- path(base_path, fname)
+
+#download.file(url = URL, 
+       #       destfile = fpath) 
+```
+
+```{r download, cache=TRUE}
+
+URL1 <- "https://nyc3.digitaloceanspaces.com/owid-public/data/co2/owid-co2-data.csv"
 
 base_path <- path("data", "raw")
 
-fname <- paste(today(), "olympic-archive.zip", 
+fname <- paste(today(), "GHG-emissions.zip", 
                sep = "_")
 
 fpath <- path(base_path, fname)
 
-download.file(url = URL, 
+download.file(url = URL1, 
               destfile = fpath) 
 ```
 
-V1 : Le fichier a été téléchargé là : `data/raw/2022-11-29_olympic-archive.zip`
-
-V2 : Le fichier ... là : `r fpath`
-
 ```{r extraction}
-
-unzip(zipfile = fpath, 
-      exdir = base_path)
+#prax 
+#unzip(zipfile = fpath, 
+ #     exdir = base_path)
 ```
 
 ```{r read}
 
-df <- read_csv(file = path(base_path, "athlete_events.csv"))
+df1 <- read_csv(file = path(base_path, "2022-12-07_GHG-emissions.csv"))
+
+# importé les données manuellement pcq trouve pas URL pour df2 
+
+df2 <- X_GM_Life_Expectancy_Dataset_v12_data_for_countries_etc_by_year
+```
+
+```{r}
+#renommer colonne mauvais nom pour fct select plus bas
+
+df2 <- df2 %>% 
+  rename(
+    life_exp = `Life expectancy`
+    )
+```
+
+```{r}
+
+df1 <- df1 %>% dplyr::select(country, year, gdp, co2_per_capita)
+
+df2 <- df2 %>% dplyr::select(name, time, life_exp)
+```
+
+```{r read}
+
+# prax 
+#df <- read_csv(file = path(base_path, "athlete_events.csv"))
+
+
+```
+
+```{r download, cache=TRUE}
+
+URL2 <- ""
+
+base_path <- path("data", "raw")
+
+fname <- paste(today(), "life-exp.csv", 
+               sep = "_")
+
+fpath <- path(base_path, fname)
+
+download.file(url = URL2, 
+              destfile = fpath) 
+
+
+```
+
+```{r}
+# mettre les deux df ensemble 
+
+table <- dplyr::bind_rows(df1, df2)
+
+```
+
+```{r}
+#garder seulement les variables pertinentes pour l'analyse 
+
+table <- table %>% dplyr::select(country, year, gdp, co2_per_capita, life_exp)
+
+?select
 
 
 ```
