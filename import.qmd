@@ -44,23 +44,7 @@ library(lubridate)
 library(tidyverse)
 library(skimr)
 library(gapminder)
-```
-
-```{r download, cache=TRUE}
-
-#prax
-
-# URL <- "https://github.com/FAS1002/A22/raw/main/assets/fichiers/olympic_archive.zip"
-
-# base_path <- path("data", "raw")
-
-# fname <- paste(today(), "olympic-archive.zip", 
-  #             sep = "_")
-
-# fpath <- path(base_path, fname)
-
-#download.file(url = URL, 
-       #       destfile = fpath) 
+library(googlesheets4)
 ```
 
 ```{r download, cache=TRUE}
@@ -84,13 +68,22 @@ download.file(url = URL1,
  #     exdir = base_path)
 ```
 
+```{r}
+
+download.file("https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx", destfile = "./data/raw/life_exp_data.xlsx")
+
+
+```
+
 ```{r read}
 
 df1 <- read_csv(file = path(base_path, "2022-12-07_GHG-emissions.csv"))
 
-# importé les données manuellement pcq trouve pas URL pour df2 
+# importer une page particuliere avec package read xl
 
-df2 <- X_GM_Life_Expectancy_Dataset_v12_data_for_countries_etc_by_year
+df2 <-  readxl::read_xlsx("./data/raw/life_exp_data.xlsx", sheet = "data-for-countries-etc-by-year")
+
+
 ```
 
 ```{r}
@@ -98,38 +91,35 @@ df2 <- X_GM_Life_Expectancy_Dataset_v12_data_for_countries_etc_by_year
 
 df2 <- df2 %>% 
   rename(
-    life_exp = `Life expectancy`
+    life_exp = "Life expectancy",
+    country = "name",
+    year = "time", 
+    iso_code = "geo"
     )
+
+df2 <- data.frame(lapply(df2, function(v) {
+  if (is.character(v)) return(toupper(v))
+  else return(v)
+}))
+
 ```
 
 ```{r}
 
-df1 <- df1 %>% dplyr::select(country, year, gdp, co2_per_capita)
-
-df2 <- df2 %>% dplyr::select(name, time, life_exp)
-```
-
-```{r read}
-
-# prax 
-#df <- read_csv(file = path(base_path, "athlete_events.csv"))
-
+df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
 
 ```
 
-```{r download, cache=TRUE}
+```{}
+```
 
-URL2 <- ""
+```{r}
 
-base_path <- path("data", "raw")
+# petits df pour tester binding & shit 
 
-fname <- paste(today(), "life-exp.csv", 
-               sep = "_")
+df3 <- head(df1, 500)
+df4 <- head(df2, 500)
 
-fpath <- path(base_path, fname)
-
-download.file(url = URL2, 
-              destfile = fpath) 
 
 
 ```
@@ -137,16 +127,40 @@ download.file(url = URL2,
 ```{r}
 # mettre les deux df ensemble 
 
-table <- dplyr::bind_rows(df1, df2)
+
+inner <- inner_join(df3, df4, by = "iso_code") 
+
+
+# table <- dplyr::bind_rows(df1, df2)
 
 ```
 
 ```{r}
 #garder seulement les variables pertinentes pour l'analyse 
 
-table <- table %>% dplyr::select(country, year, gdp, co2_per_capita, life_exp)
+# table <- table %>% dplyr::select(country, year, gdp, co2_per_capita, life_exp)
 
-?select
+# no good 
+```
+
+```{r}
+# gs4_auth()
+
+# gs4_find()
+
+```
+
+```{r}
+
+
+```
+
+```{r}
+ df1 <- as_tibble(df1)
+```
+
+```{r}
+
 
 
 ```
