@@ -7,7 +7,7 @@ description: |
 date: "2022-12-21"
 # Modifier les détails que vous voulez
 author:
-  - name: "Prénom Nom"
+  - name: "Frédérik-Xavier Duhamel"
     # Votre site web perso ou github
     url: https://github.com/VOTREUSERNAME
     # les champs d'affiliation sont optionnels, vous pouvez les
@@ -39,6 +39,8 @@ Par exemple:
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
+library(countrycode)
+
 library(fs)
 library(lubridate)
 library(tidyverse)
@@ -53,36 +55,29 @@ URL1 <- "https://nyc3.digitaloceanspaces.com/owid-public/data/co2/owid-co2-data.
 
 base_path <- path("data", "raw")
 
-fname <- paste(today(), "GHG-emissions.zip", 
+fname <- paste(today(), "GHG-emissions.csv", 
                sep = "_")
 
 fpath <- path(base_path, fname)
 
 download.file(url = URL1, 
               destfile = fpath) 
+
+df1 <- read_csv(file = path(base_path, fname))
 ```
 
-```{r extraction}
-#prax 
-#unzip(zipfile = fpath, 
- #     exdir = base_path)
+```{r}
+
+
 ```
 
 ```{r}
 
 download.file("https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx", destfile = "./data/raw/life_exp_data.xlsx")
 
-
-```
-
-```{r read}
-
-df1 <- read_csv(file = path(base_path, "2022-12-07_GHG-emissions.csv"))
-
 # importer une page particuliere avec package read xl
 
 df2 <-  readxl::read_xlsx("./data/raw/life_exp_data.xlsx", sheet = "data-for-countries-etc-by-year")
-
 
 ```
 
@@ -106,11 +101,24 @@ df2 <- data.frame(lapply(df2, function(v) {
 
 ```{r}
 
+#sélectionner seulement quelques variables
+
 df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
 
 ```
 
-```{}
+```{r}
+
+
+library(countrycode)
+
+
+
+df2$continent <- countrycode(sourcevar = df2[, "country"],
+                            origin = "country.name",
+                            destination = "continent")
+
+#fonctionne! Marche pas pr df1 pcq il y a déjà des continents dans country pê?? extraire autrement 
 ```
 
 ```{r}
@@ -122,6 +130,15 @@ df4 <- head(df2, 500)
 
 
 
+```
+
+```{r}
+
+#table <- dplyr::bind_rows(df3, 
+ #                         df4, 
+  #                        .id = "iso_code")
+
+# no good 
 ```
 
 ```{r}
@@ -156,8 +173,27 @@ inner <- inner_join(df3, df4, by = "iso_code")
 ```
 
 ```{r}
- df1 <- as_tibble(df1)
+# df1 <- as_data_frame(X2022_12_07_GHG_emissions)
+ 
+ #df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
 ```
+
+```{r}
+
+
+```
+
+```{r}
+
+```
+
+Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas afin de produire un rapport plus exhaustif:
+
+○ Présenter un ou des beaux tableaux avec plusieurs variables d'intérêts en montrant les statistiques descriptives classiques (moyennes, écart-types, données manquantes, etc.). À vous de déterminer comment il est mieux de présenter les données globales.
+
+■ Conseil: vous avez vu ou lu comment calculer plusieurs statistiques en même temps.
+
+■ Présenter les mêmes tableaux en regroupant les données par continents.
 
 ```{r}
 
