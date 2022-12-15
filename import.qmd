@@ -275,7 +275,7 @@ sd_annual <- group_by(df2, year)
 summarise(df10, ecart = sd(life_exp, na.rm = TRUE))
 
 
-#écart entre max et min life_exp 
+#écart entre max et min life_exp jusqu'à ajd 
 
 ecart <- df2 %>%
     group_by(year) %>%
@@ -284,7 +284,7 @@ ecart <- df2 %>%
         min = min(life_exp), 
         ecart = max - min,
     )  %>%
-    filter(year <= 2020)
+    filter(year <= 2022)
     
 # comment ajouter des colonnes qui montrent quel pays est max et quel pays est min??
 
@@ -292,9 +292,38 @@ max_min <- df2 %>%
     mutate(
         max_country = max(df2$life_exp)
     )
+
+
+#moyenne life exp dans le monde par année 
+mean_world <- df2 %>%
+    group_by(year) %>% 
+    summarise(
+        mean_life_exp = mean(life_exp)
+    )
+
+
 ```
 
 ○ Une variable d'intérêt que vous devrez calculer est le temps écoulé en jours entre la production (rendering) de votre rapport et la première année que des données ont été récoltées pour chacun des pays qui se trouvent dans le jeu de données de Life Expectancy at Birth.
+
+```{r}
+
+# pour enlever les NAs, mais semble qu'il n'y en a pas (mm nombre d'observations)
+life_exp_ecomplete <- df2[complete.cases(df2), ]
+
+# mettre year en format date, prendre 1er janvier ok? 
+
+df2$year <- as.Date(ISOdate(df2$year, 1, 1))
+
+# calcule le temps depuis l'année jusqu'à ajd, mais pour chaque année, ok? Comment isoler 1ère année de chaque pays? Ici à partir de 1800, mais ok? Pas vrmt utile, mm chose pour chaque pays... 
+
+life_exp_complete <- df2 %>%
+    group_by(country, year) %>%
+    summarise(
+        time_passed = today() - year
+    ) %>%
+    filter(year == "1800-01-01")
+```
 
 ○ Vous pouvez également inclure des graphiques descriptifs représentant la distribution des données, etc.
 
@@ -302,6 +331,17 @@ max_min <- df2 %>%
 
 ```{r}
 
+#graph life exp dans le temps 
 
+ggplot(data = df2) + 
+  geom_smooth(mapping = aes(x = year, y = life_exp))
 
+```
+
+```{r}
+
+#graph écart max-min dans le temps 
+
+ggplot(data = ecart) + 
+  geom_smooth(mapping = aes(x = year, y = ecart))
 ```
