@@ -47,6 +47,7 @@ library(tidyverse)
 library(skimr)
 library(gapminder)
 library(googlesheets4)
+library(knitr)
 ```
 
 ```{r download, cache=TRUE}
@@ -185,72 +186,6 @@ df7$continent <- countrycode(sourcevar = df2[, "country"],
 
 ```
 
-```{r}
-
-# petits df pour tester binding & shit 
-
-df3 <- head(df1, 500)
-df4 <- head(df2, 500)
-
-
-
-```
-
-```{r}
-
-#table <- dplyr::bind_rows(df3, 
- #                         df4, 
-  #                        .id = "iso_code")
-
-# no good 
-```
-
-```{r}
-# mettre les deux df ensemble 
-
-
-inner <- inner_join(df3, df4, by = "iso_code") 
-
-
-# table <- dplyr::bind_rows(df1, df2)
-
-```
-
-```{r}
-#garder seulement les variables pertinentes pour l'analyse 
-
-# table <- table %>% dplyr::select(country, year, gdp, co2_per_capita, life_exp)
-
-# no good 
-```
-
-```{r}
-# gs4_auth()
-
-# gs4_find()
-
-```
-
-```{r}
-
-
-```
-
-```{r}
-# df1 <- as_data_frame(X2022_12_07_GHG_emissions)
- 
- #df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
-```
-
-```{r}
-
-
-```
-
-```{r}
-
-```
-
 Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas afin de produire un rapport plus exhaustif:
 
 ○ Présenter un ou des beaux tableaux avec plusieurs variables d'intérêts en montrant les statistiques descriptives classiques (moyennes, écart-types, données manquantes, etc.). À vous de déterminer comment il est mieux de présenter les données globales.
@@ -344,4 +279,49 @@ ggplot(data = df2) +
 
 ggplot(data = ecart) + 
   geom_smooth(mapping = aes(x = year, y = ecart))
+```
+
+		
+
+1.  Pour l\'**analyse** des données de vos données, vous devrez en effectuer deux et décrire les
+    motivations de ces analyses et vos résultats. Les analyses ne sont pas obligées d\'être hyper
+    sophistiquées, mais le processus et l\'interprétation des résultats doivent se retrouver dans
+    votre document. Il y a énormément de possibilités dans toutes les variables que vous avez.
+    Comme il ne s\'agit pas d\'un cours de statistiques, la correction sera moins sévère à ce
+    niveau. Tâchez tout de même de démontrer une rigueur peu importe votre niveau de
+    connaissances! Tentez d\'expliquer vos résultats en décrivant ce qui peut les influencer, les
+    forces et faiblesses, etc.
+
+```{r}
+
+
+# selecting one year to compare 
+
+ghg_gdp_2010 <- df1 %>% 
+    filter(year == 2010)
+
+life_exp_2010 <- df2 %>% 
+    filter(year == 2010)
+
+#combining data frames for 2012 to have one row per country/year 
+
+life_ghg_gdp_2010 <- life_exp_2010 %>% 
+    select(-country, -year) %>% 
+    left_join(ghg_gdp_2010, by = "iso_code")
+
+# possible simplifier/automatiser changement d'année?
+
+
+# graph ghg/gdp, good? 
+
+ggplot(data = life_ghg_gdp_2010) + 
+  geom_smooth(mapping = aes(x = co2_per_capita, y = gdp)) +
+      geom_point(mapping = aes(x = co2_per_capita, y = gdp))
+
+# graph ghg/life exp good? 
+
+ggplot(data = life_ghg_gdp_2010) + 
+  geom_smooth(mapping = aes(y = co2_per_capita, x = life_exp)) +
+      geom_point(mapping = aes(y = co2_per_capita, x = life_exp))
+
 ```
