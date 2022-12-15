@@ -69,6 +69,43 @@ df1 <- read_csv(file = path(base_path, fname))
 ```{r}
 
 
+# download une fois par jour 
+
+
+ if (!file.exists(fname)) {
+    download.file(url = URL1,
+                  destfile = fpath)
+    paste("Le fichier",
+          fname,
+          "n'existait pas, il a donc été téléchargé à l'instant."
+)
+  } else {
+    print(paste("Le fichier",
+                fname,
+                "existe déjà, il ne sera pas téléchargé à nouveau.")
+) }
+
+
+# ne fonctionne pas, télécharge mm si fichier existe... comment automatiser? 
+
+----
+
+
+URL1 <- "https://nyc3.digitaloceanspaces.com/owid-public/data/co2/owid-co2-data.csv"
+
+base_path <- path("data", "raw")
+
+fname <- paste(today(), "GHG-emissions.csv", 
+               sep = "_")
+
+fpath <- path(base_path, fname)
+
+
+download.file(url = URL1, 
+              destfile = fpath) 
+
+df1 <- read_csv(file = path(base_path, fname))
+
 ```
 
 ```{r}
@@ -92,11 +129,17 @@ df2 <- df2 %>%
     iso_code = "geo"
     )
 
+
+# pour avoir iso_code en majuscule aussi comme df1, est-ce nécessaire tho?
+
 df2 <- data.frame(lapply(df2, function(v) {
   if (is.character(v)) return(toupper(v))
   else return(v)
 }))
 
+
+df2 <- as_tibble(df2)
+#consigne, mais ecq ça change qqchose? 
 ```
 
 ```{r}
@@ -104,6 +147,8 @@ df2 <- data.frame(lapply(df2, function(v) {
 #sélectionner seulement quelques variables
 
 df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
+
+df1 <- as_tibble(df1)
 
 ```
 
@@ -118,7 +163,26 @@ df2$continent <- countrycode(sourcevar = df2[, "country"],
                             origin = "country.name",
                             destination = "continent")
 
-#fonctionne! Marche pas pr df1 pcq il y a déjà des continents dans country pê?? extraire autrement 
+#fonctionne pr df2! Marche pas pr df1 pcq il y a déjà des continents dans country pê?? extraire autrement 
+
+
+```
+
+```{r}
+ 
+#retirer rows avec contintent : 
+
+
+df7 <- df1 %>%
+  filter(!grepl("Africa|Asia|North America|South America|Central America|Oceania|Europe", country))
+
+# fonctionne pour enlever les rows, mais toujours pas capable de faire une nouvelle colonne continent avec ce qui suit : 
+
+
+df7$continent <- countrycode(sourcevar = df2[, "country"],
+                            origin = "country.name",
+                            destination = "continent")
+
 ```
 
 ```{r}
@@ -194,6 +258,47 @@ Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas 
 ■ Conseil: vous avez vu ou lu comment calculer plusieurs statistiques en même temps.
 
 ■ Présenter les mêmes tableaux en regroupant les données par continents.
+
+```{r}
+
+#faut commencer par présenter données manquantes etc de tout le dataframe? 
+
+
+#âge moyen par continent par année, ce genre de tableau qu'on veut? 
+
+df8 <- group_by(df2, year, continent)
+df9 <- summarise(df8, mean_life_exp = mean(life_exp, na.rm = TRUE))
+
+#écart-type par année 
+
+sd_annual <- group_by(df2, year)
+summarise(df10, ecart = sd(life_exp, na.rm = TRUE))
+
+
+#écart entre max et min life_exp 
+
+ecart <- df2 %>%
+    group_by(year) %>%
+    summarise(
+        max = max(life_exp),
+        min = min(life_exp), 
+        ecart = max - min,
+    )  %>%
+    filter(year <= 2020)
+    
+# comment ajouter des colonnes qui montrent quel pays est max et quel pays est min??
+
+max_min <- df2 %>%
+    mutate(
+        max_country = max(df2$life_exp)
+    )
+```
+
+○ Une variable d'intérêt que vous devrez calculer est le temps écoulé en jours entre la production (rendering) de votre rapport et la première année que des données ont été récoltées pour chacun des pays qui se trouvent dans le jeu de données de Life Expectancy at Birth.
+
+○ Vous pouvez également inclure des graphiques descriptifs représentant la distribution des données, etc.
+
+○ Conseil: Il s'agit d'une bonne page pour rendre accessible le téléchargement des données.
 
 ```{r}
 
