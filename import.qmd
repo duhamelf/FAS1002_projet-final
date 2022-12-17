@@ -40,33 +40,13 @@ Par exemple:
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
 library(countrycode)
-
 library(fs)
 library(lubridate)
 library(tidyverse)
 library(skimr)
 library(gapminder)
-library(googlesheets4)
 library(knitr)
-
-install.packages("taskscheduleR")
-library(taskscheduleR)
-#pas bespoomn
-
 install.packages("DT")
-```
-
-```{r}
-
-
-library(taskscheduleR)
-
-# Create a task scheduler
-scheduler <- createTaskScheduler()
-
-# Add a task to run the download_data.R script at 9:00 AM every day
-addTask(scheduler, "download_data", "/path/to/script/download_data.R", 
-        schedule="daily", startTime="09:00")
 ```
 
 ```{r download, cache=TRUE}
@@ -80,10 +60,6 @@ fname <- paste(today(), "GHG-emissions.csv",
 
 fpath <- path(base_path, fname)
 
-download.file(url = URL1, 
-              destfile = fpath) 
-
-df1 <- read_csv(file = path(base_path, fname))
 ```
 
 ```{r}
@@ -105,43 +81,11 @@ df1 <- read_csv(file = path(base_path, fname))
                 "existe déjà, il ne sera pas téléchargé à nouveau.")
 ) }
 
-
-# fallait prendre fpath et non fname 
-
-#  comment automatiser? comme ça ok 
-
-----
-
-
-URL1 <- "https://nyc3.digitaloceanspaces.com/owid-public/data/co2/owid-co2-data.csv"
-
-base_path <- path("data", "raw")
-
-fname <- paste(today(), "GHG-emissions.csv", 
-               sep = "_")
-
-fpath <- path(base_path, fname)
-
-
-download.file(url = URL1, 
-              destfile = fpath) 
-
 df1 <- read_csv(file = path(base_path, fname))
 
 ```
 
 ```{r}
-
-download.file("https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx", destfile = "./data/raw/life_exp_data.xlsx")
-
-# importer une page particuliere avec package read xl
-
-df2 <-  readxl::read_xlsx("./data/raw/life_exp_data.xlsx", sheet = "data-for-countries-etc-by-year")
-
-
-
-#faire une fonction pour ce qui suit?? quel mot change mettre comme argument de ma fct, url, fname, 
-
 
 URL2 <- "https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx"
 
@@ -152,23 +96,69 @@ fname2 <- paste(today(), "life_exp_data.xlsx",
 
 fpath <- path(base_path, fname2)
 
-download.file(url = URL2, 
-              destfile = fpath) 
-
-df2 <- read_csv(file = path(base_path, fname2))
-
-
 x <- list.files(path = base_path, pattern = "life_exp_data.xlsx")
 
 y <- stringr::str_extract(string = x, pattern = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]")
 
 y <- as_date(y)
 
-lubridate::month(y)
 
-lubridate::month(today())
 
-# comparer ces deux trucs dans if plus haut 
+if (identical(x, character(0))) {
+    download.file(url = URL2, 
+              destfile = fpath) 
+        paste("Le fichier",
+          fpath,
+          "n'existait pas, il a donc été téléchargé à l'instant.")
+  } else if (lubridate::month(y) != lubridate::month(today())) {
+          unlink(x)
+          download.file(url = URL2, 
+                        destfile = fpath) 
+          print(paste("Le fichier",
+                    fpath,
+                    "n'existait pas, il a donc été téléchargé à l'instant.")
+    )
+  } else {
+      print(paste("Le fichier",
+                fpath,
+                "existe déjà, il ne sera pas téléchargé à nouveau.")
+      )
+  }
+
+# importer une page particuliere avec package read xl
+
+df2 <- readxl::read_xlsx(path = fpath, sheet = "data-for-countries-etc-by-year")
+
+
+
+
+```
+
+```{r}
+
+#faire une fonction pour df2 et df1?? quel mot change mettre comme argument de ma fct, url, fname, ..?
+
+
+download_desfois <- function(ext) {
+    for ... 
+    if (!file.exists(fpath)) {
+    download.file(url = URL1,
+                  destfile = fpath)
+    paste("Le fichier",
+          fpath,
+          "n'existait pas, il a donc été téléchargé à l'instant."
+)
+  } else {
+    print(paste("Le fichier",
+                fpath,
+                "existe déjà, il ne sera pas téléchargé à nouveau.")
+) } 
+}
+
+fpath <- path(base_path, fname1)
+fpath <- path(base_path, fname2) 
+
+fpath
 ```
 
 ```{r}
