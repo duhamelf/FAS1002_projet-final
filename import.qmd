@@ -60,11 +60,6 @@ fname <- paste(today(), "GHG-emissions.csv",
 
 fpath <- path(base_path, fname)
 
-```
-
-```{r}
-
-
 # download une fois par jour 
 
 
@@ -82,6 +77,7 @@ fpath <- path(base_path, fname)
 ) }
 
 df1 <- read_csv(file = path(base_path, fname))
+
 
 ```
 
@@ -102,7 +98,7 @@ y <- stringr::str_extract(string = x, pattern = "[0-9][0-9][0-9][0-9]-[0-9][0-9]
 
 y <- as_date(y)
 
-
+# download une fois par mois 
 
 if (identical(x, character(0))) {
     download.file(url = URL2, 
@@ -173,7 +169,14 @@ df2 <- df2 %>%
     )
 
 
-# pour avoir iso_code en majuscule aussi comme df1, est-ce nécessaire tho?
+#ajouter continent 
+
+df2$continent <- countrycode(sourcevar = df2[, "country"],
+                            origin = "country.name",
+                            destination = "continent")
+
+
+# pour avoir iso_code en majuscule aussi comme df1
 
 df2 <- data.frame(lapply(df2, function(v) {
   if (is.character(v)) return(toupper(v))
@@ -181,8 +184,6 @@ df2 <- data.frame(lapply(df2, function(v) {
 }))
 
 
-df2 <- as_tibble(df2)
-#consigne, mais ecq ça change qqchose? pas besoin deja le cas pca read en tiblle 
 ```
 
 ```{r}
@@ -190,22 +191,6 @@ df2 <- as_tibble(df2)
 #sélectionner seulement quelques variables
 
 df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
-
-
-```
-
-```{r}
-
-
-library(countrycode)
-
-
-
-df2$continent <- countrycode(sourcevar = df2[, "country"],
-                            origin = "country.name",
-                            destination = "continent")
-
-#fonctionne pr df2! Marche pas pr df1 pcq il y a déjà des continents dans country pê?? extraire autrement, ou juste prendre tableau combiné plus bas? avec continent 
 
 
 ```
@@ -244,15 +229,29 @@ library(DT)
 #faut commencer par présenter données manquantes etc de tout le dataframe? 
 
 
-#âge moyen par continent par année, ce genre de tableau qu'on veut? 
+#âge moyen par continent par année
 
-df8 <- group_by(df2, year, continent)
-df9 <- summarise(df8, mean_life_exp = mean(life_exp, na.rm = TRUE))
+mean_life_continent <- df2 %>% 
+    group_by(year, continent) %>% 
+    summarise(
+        mean_life_exp = mean(life_exp, na.rm = TRUE)
+    )
+
+life_country_2022 <- df2 %>% 
+    filter(year == 2022) %>% 
+    group_by(country) %>% 
+    summarise(life_exp)
+    
+  
+
 
 #écart-type par année 
 
-sd_annual <- group_by(df2, year)
-summarise(df10, ecart = sd(life_exp, na.rm = TRUE))
+sd_annual <- df2 %>% 
+    group_by(year) %>% 
+    summarise(
+        ecart = sd(life_exp, na.rm = TRUE)
+        )
 
 
 #écart entre max et min life_exp jusqu'à ajd 
@@ -295,19 +294,7 @@ life_exp_ecomplete <- df2[complete.cases(df2), ]
 
 df2$year <- as.Date(ISOdate(df2$year, 1, 1))
 
-# calcule le temps depuis l'année jusqu'à ajd, mais pour chaque année, ok? Comment isoler 1ère année de chaque pays? Ici à partir de 1800, mais ok? Pas vrmt utile, mm chose pour chaque pays... 
-
-life_exp_complete <- df2 %>%
-    group_by(country, year) %>%
-    summarise(
-        time_passed = today() - year
-    ) %>% 
-    filter(
-        time_passed == max(time_passed)
-    )
-
-# fonctionne, mais on peut accélérer : 
-
+# calcule le temps depuis l'année jusqu'à ajd
 
 life_exp_since <- df2 %>%
     group_by(country) %>% 
@@ -353,7 +340,7 @@ ghg_gdp_2010 <- df1 %>%
 life_exp_2010 <- df2 %>% 
     filter(year == 2010)
 
-#combining data frames for 2012 to have one row per country/year 
+#combining data frames for 2010 to have one row per country/year 
 
 life_ghg_gdp_2010 <- life_exp_2010 %>% 
     select(-country, -year) %>% 
@@ -362,6 +349,36 @@ life_ghg_gdp_2010 <- life_exp_2010 %>%
 # possible simplifier/automatiser changement d'année?
 
 
+
+```
+
+```{r}
+# function changer année pour table combinée? 
+
+
+
+
+big_table_year <- function(annee) {
+    ghg_gdp_1year <- df1 %>% 
+        filter(year == annee)
+    life_exp_1year <- df2 %>% 
+        filter(year == annee)
+    life_exp_1year %>% 
+    select(-country, -year) %>% 
+    left_join(ghg_gdp_1year, by = "iso_code")
+}
+
+big_table_year(annee = 2000)
+big_table_year(annee = 2010)
+big_table_year(annee = 2020)
+
+big_table_2030 <- big_table_year(annee = 2030)
+
+# fonctionne, mtn voir problème affichage de country selon les années ??
+
+```
+
+```{r}
 # graph ghg/gdp, good? 
 
 ggplot(data = life_ghg_gdp_2010) + 
@@ -373,5 +390,4 @@ ggplot(data = life_ghg_gdp_2010) +
 ggplot(data = life_ghg_gdp_2010) + 
   geom_smooth(mapping = aes(y = co2_per_capita, x = life_exp)) +
       geom_point(mapping = aes(y = co2_per_capita, x = life_exp))
-
 ```
