@@ -47,6 +47,7 @@ library(skimr)
 library(gapminder)
 library(knitr)
 install.packages("DT", repos = "http://cran.us.r-project.org")
+library(DT)
 ```
 
 ```{r download, cache=TRUE}
@@ -136,14 +137,6 @@ df2 <- readxl::read_xlsx(path = fpath, sheet = "data-for-countries-etc-by-year")
 ```
 
 ```{r}
-
-#faire une fonction pour df2 et df1?? quel mot change mettre comme argument de ma fct, url, fname, ..? sinon laisser faire, fonction plus bas pr autre chose 
-
-# download_desfois <- function(ext) {
-
-```
-
-```{r}
 #renommer colonne mauvais nom pour fct select plus bas
 
 df2 <- df2 %>% 
@@ -198,11 +191,6 @@ Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas 
 
 ```{r}
 
-# beau tableau = soit cable dans quarto option pr activer automatiquement ou package DT 
-
-library(DT)
-
-#faut commencer par présenter données manquantes etc de tout le dataframe? 
 
 # données manquantes (pas de données manquantes dans df2)
 
@@ -217,48 +205,46 @@ life_country_2022 <- df2 %>%
     group_by(country) %>% 
     summarise(life_exp)
 
+datatable(life_country_2022, rownames = FALSE, colnames = c("Pays" = "country", 'Espérance de vie en 2022' = 'life_exp'))
+
 #âge moyen par continent par année
 
 mean_life_continent <- df2 %>% 
     group_by(year, continent) %>% 
     summarise(
-        mean_life_exp = mean(life_exp, na.rm = TRUE)
+        mean_life_exp = round(mean(life_exp), digits = 1)
     )
+
+datatable(mean_life_continent, rownames = FALSE, colnames = c("Continent" = "continent", 'Espérance de vie moyenne' = 'mean_life_exp', "Année" = "year"))
+
 
 #moyenne life exp dans le monde par année 
-mean_world <- df2 %>%
+
+mean_life_world <- df2 %>%
     group_by(year) %>% 
     summarise(
-        mean_life_exp = mean(life_exp)
+        mean_life_exp = round(mean(life_exp), digits = 1)
     )
 
+datatable(mean_life_world, rownames = FALSE, colnames = c('Espérance de vie moyenne dans le monde' = 'mean_life_exp', "Année" = "year"))
 
 #écart-type par année 
 
 sd_annual <- df2 %>% 
     group_by(year) %>% 
     summarise(
-        ecart = sd(life_exp, na.rm = TRUE)
+        ecart = round(sd(life_exp, na.rm = TRUE), digits = 1)
         )
 
-
-#écart entre max et min life_exp jusqu'à ajd 
-
-ecart <- df2 %>%
-    group_by(year) %>%
-    summarise(
-        max = max(life_exp),
-        min = min(life_exp), 
-        ecart = max - min,
-    )  %>%
-    filter(year <= 2022)
-
+datatable(sd_annual, rownames = FALSE, colnames = c("Écart-type de l'espérance de vie entre les pays" = "ecart", "Année" = "year"))
 
 #tableau avec pays plus haute life_exp au monde par année 
 
 max_life_country_per_year <- df2 %>% 
     group_by(year) %>% 
     filter(life_exp == max(life_exp))
+
+max_life_country_per_year <- rename(max_life_country_per_year, "max_country" = "country")
     
 
 #tableau avec pays plus basse life_exp au monde par année 
@@ -267,9 +253,23 @@ min_life_country_per_year <- df2 %>%
     group_by(year) %>% 
     filter(life_exp == min(life_exp))
 
+min_life_country_per_year <- rename(min_life_country_per_year, "min_country" = "country")
 
-# combiner les 3 tableaux qui précèdent?? 
 
+# combiner les 2 tableaux qui précèdent pour avoir un cool tableau avec max et min et écart 
+
+comp_life_exp <- min_life_country_per_year %>% 
+    left_join(max_life_country_per_year, by = "year") %>% 
+    mutate(
+        ecart = life_exp.y - life_exp.x
+    )
+
+comp_life_exp <- comp_life_exp %>% 
+    select(
+        year, max_country, life_exp.y, min_country, life_exp.x, ecart
+    )
+
+datatable(comp_life_exp, rownames = FALSE, colnames = c("Année" = "year", "Pays à l'espérance de vie la plus élevée" = "max_country", "Espérance de vie la plus élevée" = "life_exp.y", "Pays à l'espérance de vie la plus faible" = "min_country", "Espérance de vie la plus faible" = "life_exp.x", "Écart" = "ecart"))
 ```
 
 ○ Une variable d'intérêt que vous devrez calculer est le temps écoulé en jours entre la production (rendering) de votre rapport et la première année que des données ont été récoltées pour chacun des pays qui se trouvent dans le jeu de données de Life Expectancy at Birth.
