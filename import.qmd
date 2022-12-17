@@ -132,29 +132,10 @@ df2 <- readxl::read_xlsx(path = fpath, sheet = "data-for-countries-etc-by-year")
 
 ```{r}
 
-#faire une fonction pour df2 et df1?? quel mot change mettre comme argument de ma fct, url, fname, ..?
+#faire une fonction pour df2 et df1?? quel mot change mettre comme argument de ma fct, url, fname, ..? sinon laisser faire, fonction plus bas pr autre chose 
 
+# download_desfois <- function(ext) {
 
-download_desfois <- function(ext) {
-    for ... 
-    if (!file.exists(fpath)) {
-    download.file(url = URL1,
-                  destfile = fpath)
-    paste("Le fichier",
-          fpath,
-          "n'existait pas, il a donc été téléchargé à l'instant."
-)
-  } else {
-    print(paste("Le fichier",
-                fpath,
-                "existe déjà, il ne sera pas téléchargé à nouveau.")
-) } 
-}
-
-fpath <- path(base_path, fname1)
-fpath <- path(base_path, fname2) 
-
-fpath
 ```
 
 ```{r}
@@ -228,6 +209,12 @@ library(DT)
 
 #faut commencer par présenter données manquantes etc de tout le dataframe? 
 
+# life_exp par pays en 2022  
+
+life_country_2022 <- df2 %>% 
+    filter(year == 2022) %>% 
+    group_by(country) %>% 
+    summarise(life_exp)
 
 #âge moyen par continent par année
 
@@ -237,12 +224,12 @@ mean_life_continent <- df2 %>%
         mean_life_exp = mean(life_exp, na.rm = TRUE)
     )
 
-life_country_2022 <- df2 %>% 
-    filter(year == 2022) %>% 
-    group_by(country) %>% 
-    summarise(life_exp)
-    
-  
+#moyenne life exp dans le monde par année 
+mean_world <- df2 %>%
+    group_by(year) %>% 
+    summarise(
+        mean_life_exp = mean(life_exp)
+    )
 
 
 #écart-type par année 
@@ -264,22 +251,23 @@ ecart <- df2 %>%
         ecart = max - min,
     )  %>%
     filter(year <= 2022)
-    
-# comment ajouter des colonnes qui montrent quel pays est max et quel pays est min??
-
-max_min <- df2 %>%
-    mutate(
-        max_country = max(df2$life_exp)
-    )
 
 
-#moyenne life exp dans le monde par année 
-mean_world <- df2 %>%
+#tableau avec pays plus haute life_exp au monde par année 
+
+max_life_country_per_year <- df2 %>% 
     group_by(year) %>% 
-    summarise(
-        mean_life_exp = mean(life_exp)
-    )
+    filter(life_exp == max(life_exp))
+    
 
+#tableau avec pays plus basse life_exp au monde par année 
+
+min_life_country_per_year <- df2 %>% 
+    group_by(year) %>% 
+    filter(life_exp == min(life_exp))
+
+
+# combiner les 3 tableaux qui précèdent?? 
 
 ```
 
