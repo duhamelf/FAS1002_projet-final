@@ -46,7 +46,7 @@ library(tidyverse)
 library(skimr)
 library(gapminder)
 library(knitr)
-install.packages("DT")
+install.packages("DT", repos = "http://cran.us.r-project.org")
 ```
 
 ```{r download, cache=TRUE}
@@ -152,7 +152,7 @@ df2 <- df2 %>%
 
 #ajouter continent 
 
-df2$continent <- countrycode(sourcevar = df2[, "country"],
+df2$continent <- countrycode(sourcevar = df2$country,
                             origin = "country.name",
                             destination = "continent")
 
@@ -165,6 +165,7 @@ df2 <- data.frame(lapply(df2, function(v) {
 }))
 
 
+
 ```
 
 ```{r}
@@ -173,23 +174,6 @@ df2 <- data.frame(lapply(df2, function(v) {
 
 df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
 
-
-```
-
-```{r}
- 
-#retirer rows avec contintent : 
-
-
-df7 <- df1 %>%
-  filter(!grepl("Africa|Asia|North America|South America|Central America|Oceania|Europe", country))
-
-# fonctionne pour enlever les rows, mais toujours pas capable de faire une nouvelle colonne continent avec ce qui suit : 
-
-
-df7$continent <- countrycode(sourcevar = df2[, "country"],
-                            origin = "country.name",
-                            destination = "continent")
 
 ```
 
