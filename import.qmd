@@ -60,10 +60,13 @@ fname <- paste(today(), "GHG-emissions.csv",
 
 fpath <- path(base_path, fname)
 
+junk <- dir(path = base_path, pattern = "GHG-emissions.csv") 
+
 # download une fois par jour 
 
 
  if (!file.exists(fpath)) {
+    file.remove(junk)
     download.file(url = URL1,
                   destfile = fpath)
     paste("Le fichier",
@@ -78,6 +81,8 @@ fpath <- path(base_path, fname)
 
 df1 <- read_csv(file = path(base_path, fname))
 
+
+# pas cap de supprimer les données plus à jour wtf how???
 
 ```
 
@@ -172,7 +177,13 @@ df2 <- data.frame(lapply(df2, function(v) {
 
 #sélectionner seulement quelques variables
 
-df1 <- df1 %>% dplyr::select(iso_code, country, year, gdp, co2_per_capita)
+df1 <- df1 %>% dplyr::select(iso_code, country, population, year, gdp, ghg_per_capita)
+
+#ajouter variable gdp/capita 
+
+df1 <- df1 %>% mutate(
+    gdp_per_capita = (gdp / population)
+)
 
 
 ```
@@ -192,6 +203,12 @@ Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas 
 library(DT)
 
 #faut commencer par présenter données manquantes etc de tout le dataframe? 
+
+# données manquantes (pas de données manquantes dans df2)
+
+sum(is.na(df1$gdp_per_capita))
+sum(is.na(df1$ghg_per_capita))
+sum(is.na(df2))
 
 # life_exp par pays en 2022  
 
@@ -354,12 +371,12 @@ big_table_2030 <- big_table_year(annee = 2030)
 # graph ghg/gdp, good? 
 
 ggplot(data = life_ghg_gdp_2010) + 
-  geom_smooth(mapping = aes(x = co2_per_capita, y = gdp)) +
-      geom_point(mapping = aes(x = co2_per_capita, y = gdp))
+  geom_smooth(mapping = aes(x = ghg_per_capita, y = gdp_per_capita)) +
+      geom_point(mapping = aes(x = ghg_per_capita, y = gdp_per_capita))
 
 # graph ghg/life exp good? 
 
 ggplot(data = life_ghg_gdp_2010) + 
-  geom_smooth(mapping = aes(y = co2_per_capita, x = life_exp)) +
-      geom_point(mapping = aes(y = co2_per_capita, x = life_exp))
+  geom_smooth(mapping = aes(y = ghg_per_capita, x = life_exp)) +
+      geom_point(mapping = aes(y = ghg_per_capita, x = life_exp))
 ```
