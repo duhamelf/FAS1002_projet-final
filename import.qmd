@@ -275,37 +275,6 @@ write_csv(comp_life_exp, file = "./data/processed/comp_life_exp.csv")
 write_csv(life_exp_since, file = "./data/processed/life_exp_since.csv")
 ```
 
-○ Une variable d'intérêt que vous devrez calculer est le temps écoulé en jours entre la production (rendering) de votre rapport et la première année que des données ont été récoltées pour chacun des pays qui se trouvent dans le jeu de données de Life Expectancy at Birth.
-
-```{r}
-
-# mettre year en format date, prendre 1er janvier ok? 
-
-df2$year_date <- as.Date(ISOdate(df2$year, 1, 1))
-
-# calcule le temps depuis l'année jusqu'à ajd
-
-life_exp_since <- df2 %>%
-    group_by(country) %>% 
-    mutate(
-        time_since = today() - year_date 
-    ) %>% 
-    filter(
-        time_since == max(time_since)
-    ) %>% 
-    select(-year_date)
-
-datatable(life_exp_since, rownames = FALSE)
-
-#export data 
-
-write_csv(life_exp_since, file = "./data/processed/life_exp_since.csv")
-```
-
-○ Vous pouvez également inclure des graphiques descriptifs représentant la distribution des données, etc.
-
-○ Conseil: Il s'agit d'une bonne page pour rendre accessible le téléchargement des données.
-
 ```{r}
 
 # Espérance de vie moyenne dans le monde 1800-2100
@@ -355,38 +324,39 @@ big_table_2020 <- big_table_year(annee = 2020)
 
 # Exporter les données pour 2015 
 
+write_csv(big_table_2015, file = "./data/processed/big_table_2015.csv")
 
-
-# plot ghg/capita vs gdp/capita 
+# Graphique montrant la relation entre le PIB/habitant et les émissions de GES/habitant 
 
 ggplot(data = big_table_2015, mapping = aes(x = gdp_per_capita, y = ghg_per_capita)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
-#plot ghg/capita vs life_exp
+# Graphique montrant la relation entre les émissions de GES/habitant et l'espérance de vie
 
 ggplot(data = big_table_2015, mapping = aes(y = ghg_per_capita, x = life_exp)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
-#plot gdp/capita vs life_exp
+# Graphique montrant la relation entre le PIB/habitant et l'espérance de vie plot 
 
 ggplot(data = big_table_2015, mapping = aes(y = gdp_per_capita, x = life_exp)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
-
-
 ```
 
 ```{r}
 
+# Régressions linéaires simples entre :
 
-#simple linear regressions
+# 1. Les émissions de GES/habitant et le PIB/habitant 
 
 fit_ghg_gdp <- lm(ghg_per_capita~gdp_per_capita, data = big_table_2015)
 summary(fit_ghg_gdp)
 confint(fit_ghg_gdp)
+
+# 2. L'espérance de vie et les émissions de GES/habitant 
 
 fit_ghg_life <- lm(life_exp~ghg_per_capita, data = big_table_2015)
 summary(fit_ghg_life)
@@ -396,19 +366,18 @@ fit_gdp_life <- lm(life_exp~gdp_per_capita, data = big_table_2015)
 summary(fit_gdp_life)
 confint(fit_gdp_life)
 
-
-#multiple linear regression
+# Régression linéaire multiple pour prédire l'espérance de vie à partir des émissions de GES/habitant et du PIB/habitant 
 
 fit_life <- lm(life_exp ~ ghg_per_capita + gdp_per_capita, data = big_table_2015)
 summary(fit_life)
 
-#control 
+# Calculer la contribution unique des variables concernant les émissions de GES/habitant et le PIB/habitant pour expliquer l'espérance de vie grâce au R carré semi-partiel (semi-partial R-squared) :
 
-#compute semi-partial R-squared for gdp
+# du PIB/habitant 
 
 summary(fit_life)$r.squared - summary(fit_ghg_life)$r.squared 
 
-#compute semi-partial R-squared for ghg
+# des émissions de GES/habitant 
 
 summary(fit_life)$r.squared - summary(fit_gdp_life)$r.squared 
 
