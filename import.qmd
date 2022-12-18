@@ -276,23 +276,23 @@ datatable(comp_life_exp, rownames = FALSE, colnames = c("Année" = "year", "Pays
 
 ```{r}
 
-# pour enlever les NAs, mais semble qu'il n'y en a pas (mm nombre d'observations)
-life_exp_ecomplete <- df2[complete.cases(df2), ]
-
 # mettre year en format date, prendre 1er janvier ok? 
 
-df2$year <- as.Date(ISOdate(df2$year, 1, 1))
+df2$year_date <- as.Date(ISOdate(df2$year, 1, 1))
 
 # calcule le temps depuis l'année jusqu'à ajd
 
 life_exp_since <- df2 %>%
     group_by(country) %>% 
     mutate(
-        time_since = today() - year 
+        time_since = today() - year_date 
     ) %>% 
     filter(
         time_since == max(time_since)
-    )
+    ) %>% 
+    select(-year_date)
+
+datatable(life_exp_since, rownames = FALSE)
 ```
 
 ○ Vous pouvez également inclure des graphiques descriptifs représentant la distribution des données, etc.
@@ -306,13 +306,15 @@ life_exp_since <- df2 %>%
 ggplot(data = df2) + 
   geom_smooth(mapping = aes(x = year, y = life_exp))
 
+
+
 ```
 
 ```{r}
 
 #graph écart max-min dans le temps 
 
-ggplot(data = ecart) + 
+ggplot(data = comp_life_exp) + 
   geom_smooth(mapping = aes(x = year, y = ecart))
 ```
 
@@ -346,7 +348,6 @@ life_ghg_gdp_2010 <- life_exp_2010 %>%
 
 
 
-
 big_table_year <- function(annee) {
     ghg_gdp_1year <- df1 %>% 
         filter(year == annee)
@@ -361,22 +362,36 @@ big_table_year(annee = 2000)
 big_table_year(annee = 2010)
 big_table_year(annee = 2020)
 
-big_table_2030 <- big_table_year(annee = 2030)
+#manque bcp de données après 2010
 
-# fonctionne, mtn voir problème affichage de country selon les années ??
+big_table_2000 <- big_table_year(annee = 2000)
+big_table_2010 <- big_table_year(annee = 2010)
+big_table_2020 <- big_table_year(annee = 2020)
+
+
+# plot ghg/capita vs gdp/capita 
+
+ggplot(data = big_table_2010, mapping = aes(x = gdp_per_capita, y = ghg_per_capita)) + 
+  geom_point(mapping = aes(color = continent)) + 
+  geom_smooth()
+
+#plot ghg/capita vs life_exp
+
+ggplot(data = big_table_2010, mapping = aes(y = ghg_per_capita, x = life_exp)) + 
+  geom_point(mapping = aes(color = continent)) + 
+  geom_smooth()
+
+#plot gdp/capita vs life_exp
+
+ggplot(data = big_table_2010, mapping = aes(y = gdp_per_capita, x = life_exp)) + 
+  geom_point(mapping = aes(color = continent)) + 
+  geom_smooth()
+
+
 
 ```
 
 ```{r}
-# graph ghg/gdp, good? 
 
-ggplot(data = life_ghg_gdp_2010) + 
-  geom_smooth(mapping = aes(x = ghg_per_capita, y = gdp_per_capita)) +
-      geom_point(mapping = aes(x = ghg_per_capita, y = gdp_per_capita))
 
-# graph ghg/life exp good? 
-
-ggplot(data = life_ghg_gdp_2010) + 
-  geom_smooth(mapping = aes(y = ghg_per_capita, x = life_exp)) +
-      geom_point(mapping = aes(y = ghg_per_capita, x = life_exp))
 ```
