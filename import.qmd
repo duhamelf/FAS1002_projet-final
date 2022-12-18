@@ -394,4 +394,34 @@ ggplot(data = big_table_2010, mapping = aes(y = gdp_per_capita, x = life_exp)) +
 ```{r}
 
 
+#simple linear regressions
+
+fit_ghg_gdp <- lm(ghg_per_capita~gdp_per_capita, data = big_table_2010)
+summary(fit_ghg_gdp)
+confint(fit_ghg_gdp)
+
+fit_ghg_life <- lm(life_exp~ghg_per_capita, data = big_table_2010)
+summary(fit_ghg_life)
+confint(fit_ghg_life)
+
+fit_gdp_life <- lm(life_exp~gdp_per_capita, data = big_table_2010)
+summary(fit_gdp_life)
+confint(fit_gdp_life)
+
+
+#multiple linear regression
+
+fit_life <- lm(life_exp ~ ghg_per_capita + gdp_per_capita, data = big_table_2010)
+summary(fit_life)
+
+#control 
+
+#compute semi-partial R-squared for gdp
+
+summary(fit_life)$r.squared - summary(fit_ghg_life)$r.squared 
+
+#compute semi-partial R-squared for ghg
+
+summary(fit_life)$r.squared - summary(fit_gdp_life)$r.squared 
+
 ```
