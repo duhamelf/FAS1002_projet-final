@@ -52,6 +52,9 @@ library(DT)
 
 ```{r download, cache=TRUE}
 
+# Télécharger le premier ensemble de données une fois par jour 
+# pas cap de supprimer les données plus à jour wtf how???
+
 URL1 <- "https://nyc3.digitaloceanspaces.com/owid-public/data/co2/owid-co2-data.csv"
 
 base_path <- path("data", "raw")
@@ -62,9 +65,6 @@ fname <- paste(today(), "GHG-emissions.csv",
 fpath <- path(base_path, fname)
 
 junk <- dir(path = base_path, pattern = "GHG-emissions.csv") 
-
-# download une fois par jour 
-
 
  if (!file.exists(fpath)) {
     file.remove(junk)
@@ -82,12 +82,12 @@ junk <- dir(path = base_path, pattern = "GHG-emissions.csv")
 
 df1 <- read_csv(file = path(base_path, fname))
 
-
-# pas cap de supprimer les données plus à jour wtf how???
-
 ```
 
 ```{r}
+
+# Télécharger le deuxième ensemble de données une fois par mois 
+# pas cap de supprimer les données plus à jour wtf how???
 
 URL2 <- "https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx"
 
@@ -103,8 +103,6 @@ x <- list.files(path = base_path, pattern = "life_exp_data.xlsx")
 y <- stringr::str_extract(string = x, pattern = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]")
 
 y <- as_date(y)
-
-# download une fois par mois 
 
 if (identical(x, character(0))) {
     download.file(url = URL2, 
@@ -127,17 +125,15 @@ if (identical(x, character(0))) {
       )
   }
 
-# importer une page particuliere avec package read xl
+# Importer une page en particulier 
 
 df2 <- readxl::read_xlsx(path = fpath, sheet = "data-for-countries-etc-by-year")
-
-
-
 
 ```
 
 ```{r}
-#renommer colonne mauvais nom pour fct select plus bas
+
+# Renommer certaines colonnes pour faciliter les opérations plus bas
 
 df2 <- df2 %>% 
   rename(
@@ -147,37 +143,32 @@ df2 <- df2 %>%
     iso_code = "geo"
     )
 
-
-#ajouter continent 
+# Ajouter une variable pour les continents
 
 df2$continent <- countrycode(sourcevar = df2$country,
                             origin = "country.name",
                             destination = "continent")
 
-
-# pour avoir iso_code en majuscule aussi comme df1
+# Mettre iso_code en majuscule comme df1 et faciliter la combinaison plus bas 
 
 df2 <- data.frame(lapply(df2, function(v) {
   if (is.character(v)) return(toupper(v))
   else return(v)
 }))
 
-
-
 ```
 
 ```{r}
 
-#sélectionner seulement quelques variables
+# Sélectionner quelques variables d'intérêt
 
 df1 <- df1 %>% dplyr::select(iso_code, country, population, year, gdp, ghg_per_capita)
 
-#ajouter variable gdp/capita 
+# Ajouter la variable du PIB/habitant 
 
 df1 <- df1 %>% mutate(
     gdp_per_capita = (gdp / population)
 )
-
 
 ```
 
@@ -191,14 +182,13 @@ Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas 
 
 ```{r}
 
-
-# données manquantes (pas de données manquantes dans df2)
+# Données manquantes (pas de données manquantes dans df2)
 
 sum(is.na(df1$gdp_per_capita))
 sum(is.na(df1$ghg_per_capita))
 sum(is.na(df2))
 
-# life_exp par pays en 2022  
+# Espérance de vie par pays en 2022  
 
 life_country_2022 <- df2 %>% 
     filter(year == 2022) %>% 
@@ -207,7 +197,7 @@ life_country_2022 <- df2 %>%
 
 datatable(life_country_2022, rownames = FALSE, colnames = c("Pays" = "country", 'Espérance de vie en 2022' = 'life_exp'))
 
-#âge moyen par continent par année
+# Âge moyen par continent par année
 
 mean_life_continent <- df2 %>% 
     group_by(year, continent) %>% 
@@ -217,37 +207,26 @@ mean_life_continent <- df2 %>%
 
 datatable(mean_life_continent, rownames = FALSE, colnames = c("Continent" = "continent", 'Espérance de vie moyenne' = 'mean_life_exp', "Année" = "year"))
 
-
-#moyenne life exp dans le monde par année 
+# Moyenne et écart-type de l'espérance de vie dans le monde par année 
 
 mean_life_world <- df2 %>%
     group_by(year) %>% 
     summarise(
-        mean_life_exp = round(mean(life_exp), digits = 1)
+        mean_life_exp = round(mean(life_exp), digits = 1),
+        sd_life = round(sd(life_exp, na.rm = TRUE), digits = 1)
     )
 
-datatable(mean_life_world, rownames = FALSE, colnames = c('Espérance de vie moyenne dans le monde' = 'mean_life_exp', "Année" = "year"))
+datatable(mean_life_world, rownames = FALSE, colnames = c('Espérance de vie moyenne dans le monde' = 'mean_life_exp', "Écart-type de l'espérance de vie entre les pays" = "sd_life", "Année" = "year"))
 
-#écart-type par année 
-
-sd_annual <- df2 %>% 
-    group_by(year) %>% 
-    summarise(
-        ecart = round(sd(life_exp, na.rm = TRUE), digits = 1)
-        )
-
-datatable(sd_annual, rownames = FALSE, colnames = c("Écart-type de l'espérance de vie entre les pays" = "ecart", "Année" = "year"))
-
-#tableau avec pays plus haute life_exp au monde par année 
+# Pays avec l'espérance de vie la plus élevée au monde par année 
 
 max_life_country_per_year <- df2 %>% 
     group_by(year) %>% 
     filter(life_exp == max(life_exp))
 
 max_life_country_per_year <- rename(max_life_country_per_year, "max_country" = "country")
-    
 
-#tableau avec pays plus basse life_exp au monde par année 
+# Pays avec l'espérance de vie la plus faible au monde par année 
 
 min_life_country_per_year <- df2 %>% 
     group_by(year) %>% 
@@ -255,8 +234,7 @@ min_life_country_per_year <- df2 %>%
 
 min_life_country_per_year <- rename(min_life_country_per_year, "min_country" = "country")
 
-
-# combiner les 2 tableaux qui précèdent pour avoir un cool tableau avec max et min et écart 
+# Combiner les 2 tableaux qui précèdent et ajouter l'écart  
 
 comp_life_exp <- min_life_country_per_year %>% 
     left_join(max_life_country_per_year, by = "year") %>% 
@@ -270,6 +248,31 @@ comp_life_exp <- comp_life_exp %>%
     )
 
 datatable(comp_life_exp, rownames = FALSE, colnames = c("Année" = "year", "Pays à l'espérance de vie la plus élevée" = "max_country", "Espérance de vie la plus élevée" = "life_exp.y", "Pays à l'espérance de vie la plus faible" = "min_country", "Espérance de vie la plus faible" = "life_exp.x", "Écart" = "ecart"))
+
+# Mettre la variable "year" en format "date" dans df2 
+
+df2$year_date <- as.Date(ISOdate(df2$year, 1, 1))
+
+# Calculer le temps depuis l'année de la première observation par pays jusqu'à aujourd'hui, en jours
+
+life_exp_since <- df2 %>%
+    group_by(country) %>% 
+    mutate(
+        time_since = today() - year_date 
+    ) %>% 
+    filter(
+        time_since == max(time_since)
+    ) %>% 
+    select(-year_date)
+
+datatable(life_exp_since, rownames = FALSE, colnames = c("Nombre de jours depuis la première observation" = "time_since", "Année de la première observation" = "year", "Espérance de vie" = "life_exp", "Continent" = "continent", "Pays" = "country"))
+
+# Exporter les données  
+
+write_csv(mean_life_continent, file = "./data/processed/mean_life_continent.csv")
+write_csv(mean_life_world, file = "./data/processed/mean_life_world.csv")
+write_csv(comp_life_exp, file = "./data/processed/comp_life_exp.csv")
+write_csv(life_exp_since, file = "./data/processed/life_exp_since.csv")
 ```
 
 ○ Une variable d'intérêt que vous devrez calculer est le temps écoulé en jours entre la production (rendering) de votre rapport et la première année que des données ont été récoltées pour chacun des pays qui se trouvent dans le jeu de données de Life Expectancy at Birth.
@@ -293,6 +296,10 @@ life_exp_since <- df2 %>%
     select(-year_date)
 
 datatable(life_exp_since, rownames = FALSE)
+
+#export data 
+
+write_csv(life_exp_since, file = "./data/processed/life_exp_since.csv")
 ```
 
 ○ Vous pouvez également inclure des graphiques descriptifs représentant la distribution des données, etc.
@@ -301,52 +308,29 @@ datatable(life_exp_since, rownames = FALSE)
 
 ```{r}
 
-#graph life exp dans le temps 
+# Espérance de vie moyenne dans le monde 1800-2100
 
-ggplot(data = df2) + 
-  geom_smooth(mapping = aes(x = year, y = life_exp))
+ggplot(data = mean_life_world) + 
+  geom_smooth(mapping = aes(x = year, y = mean_life_exp))
 
+# Espérance de vie par continent 1800-2100
 
+ggplot(data = df2, mapping = aes(y = life_exp, x = year)) + 
+  geom_smooth(mapping = aes(color = continent)) 
 
-```
-
-```{r}
-
-#graph écart max-min dans le temps 
+# Écart entre les pays à l'espérance de vie la plus élevée et la plus faibles 1800-2100 
 
 ggplot(data = comp_life_exp) + 
   geom_smooth(mapping = aes(x = year, y = ecart))
+
+
 ```
 
 1.  Pour l'**analyse** des données de vos données, vous devrez en effectuer deux et décrire les motivations de ces analyses et vos résultats. Les analyses ne sont pas obligées d'être hyper sophistiquées, mais le processus et l'interprétation des résultats doivent se retrouver dans votre document. Il y a énormément de possibilités dans toutes les variables que vous avez. Comme il ne s'agit pas d'un cours de statistiques, la correction sera moins sévère à ce niveau. Tâchez tout de même de démontrer une rigueur peu importe votre niveau de connaissances! Tentez d'expliquer vos résultats en décrivant ce qui peut les influencer, les forces et faiblesses, etc.
 
 ```{r}
 
-
-# selecting one year to compare 
-
-ghg_gdp_2010 <- df1 %>% 
-    filter(year == 2010)
-
-life_exp_2010 <- df2 %>% 
-    filter(year == 2010)
-
-#combining data frames for 2010 to have one row per country/year 
-
-life_ghg_gdp_2010 <- life_exp_2010 %>% 
-    select(-country, -year) %>% 
-    left_join(ghg_gdp_2010, by = "iso_code")
-
-# possible simplifier/automatiser changement d'année?
-
-
-
-```
-
-```{r}
-# function changer année pour table combinée? 
-
-
+# Fonction pour combiner les variables d'intérêt de df1 et df2 pour l'année de notre choix 
 
 big_table_year <- function(annee) {
     ghg_gdp_1year <- df1 %>% 
@@ -358,32 +342,36 @@ big_table_year <- function(annee) {
     left_join(ghg_gdp_1year, by = "iso_code")
 }
 
-big_table_year(annee = 2000)
-big_table_year(annee = 2010)
-big_table_year(annee = 2020)
+# Il manque beaucoup de données dans df1 pour les années les plus récentes, donc nous procédons aux analyses avec l'année 2015 
 
-#manque bcp de données après 2010
+big_table_year(annee = 2000)
+big_table_year(annee = 2015)
+big_table_year(annee = 2020)
 
 big_table_2000 <- big_table_year(annee = 2000)
 big_table_2010 <- big_table_year(annee = 2010)
+big_table_2015 <- big_table_year(annee = 2015)
 big_table_2020 <- big_table_year(annee = 2020)
+
+# Exporter les données pour 2015 
+
 
 
 # plot ghg/capita vs gdp/capita 
 
-ggplot(data = big_table_2010, mapping = aes(x = gdp_per_capita, y = ghg_per_capita)) + 
+ggplot(data = big_table_2015, mapping = aes(x = gdp_per_capita, y = ghg_per_capita)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
 #plot ghg/capita vs life_exp
 
-ggplot(data = big_table_2010, mapping = aes(y = ghg_per_capita, x = life_exp)) + 
+ggplot(data = big_table_2015, mapping = aes(y = ghg_per_capita, x = life_exp)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
 #plot gdp/capita vs life_exp
 
-ggplot(data = big_table_2010, mapping = aes(y = gdp_per_capita, x = life_exp)) + 
+ggplot(data = big_table_2015, mapping = aes(y = gdp_per_capita, x = life_exp)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
@@ -396,22 +384,22 @@ ggplot(data = big_table_2010, mapping = aes(y = gdp_per_capita, x = life_exp)) +
 
 #simple linear regressions
 
-fit_ghg_gdp <- lm(ghg_per_capita~gdp_per_capita, data = big_table_2010)
+fit_ghg_gdp <- lm(ghg_per_capita~gdp_per_capita, data = big_table_2015)
 summary(fit_ghg_gdp)
 confint(fit_ghg_gdp)
 
-fit_ghg_life <- lm(life_exp~ghg_per_capita, data = big_table_2010)
+fit_ghg_life <- lm(life_exp~ghg_per_capita, data = big_table_2015)
 summary(fit_ghg_life)
 confint(fit_ghg_life)
 
-fit_gdp_life <- lm(life_exp~gdp_per_capita, data = big_table_2010)
+fit_gdp_life <- lm(life_exp~gdp_per_capita, data = big_table_2015)
 summary(fit_gdp_life)
 confint(fit_gdp_life)
 
 
 #multiple linear regression
 
-fit_life <- lm(life_exp ~ ghg_per_capita + gdp_per_capita, data = big_table_2010)
+fit_life <- lm(life_exp ~ ghg_per_capita + gdp_per_capita, data = big_table_2015)
 summary(fit_life)
 
 #control 
