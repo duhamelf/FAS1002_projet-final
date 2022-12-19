@@ -96,7 +96,7 @@ base_path <- path("data", "raw")
 fname2 <- paste(today(), "life_exp_data.xlsx", 
                sep = "_")
 
-fpath <- path(base_path, fname2)
+fpath2 <- path(base_path, fname2)
 
 x <- list.files(path = base_path, pattern = "life_exp_data.xlsx")
 
@@ -127,7 +127,9 @@ if (identical(x, character(0))) {
 
 # Importer une page en particulier 
 
-df2 <- readxl::read_xlsx(path = fpath, sheet = "data-for-countries-etc-by-year")
+df2 <- readxl::read_xlsx(path = fpath2, sheet = "data-for-countries-etc-by-year")
+
+## ne fonctionne plus cette dernière partie whyyyyy??? 
 
 ```
 
