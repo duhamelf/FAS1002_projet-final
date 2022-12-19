@@ -361,6 +361,10 @@ big_table_2020 <- big_table_year(annee = 2020)
 # Exporter les données pour 2015 
 
 write_csv(big_table_2015, file = "./data/processed/big_table_2015.csv")
+
+# Mettre la fonction dans helper.R
+
+file.create("./R/helper.R")
 ```
 
 ### PIB/habitant et émissions de GES/habitant, 2015
