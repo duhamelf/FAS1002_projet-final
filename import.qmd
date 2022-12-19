@@ -28,7 +28,7 @@ bibliography: references.bib
 Description ...
 
 ::: callout-important
-Les données proviennent entre autres de @owidenergy et de Gapminder.
+Les données proviennent entre autres de @owidco2andothergreenhousegasemissions et de @Gapminderlifeexpextancy
 :::
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
