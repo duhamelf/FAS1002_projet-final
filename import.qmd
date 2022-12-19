@@ -1,8 +1,7 @@
 ---
-title: "Titre de votre page d'importation"
+title: "Espérance de vie, émissions de GES, et PIB"
 title-block-banner: true
 description: | 
-  Petite description de cette page.
 # à changer
 date: "2022-12-21"
 # Modifier les détails que vous voulez
@@ -25,11 +24,15 @@ citation: true
 bibliography: references.bib
 ---
 
-Description ...
+# Travail final - FAS1002
+
+Dans ce rapport, nous examinons certaines variables de deux ensembles de données concernant l'espérance de vie, les émissions de GES, et le Produit intérieur brut (PIB) des pays du monde avant de les mettre en relation.
 
 ::: callout-important
 Les données proviennent entre autres de @owidco2andothergreenhousegasemissions et de @gapminderlifeexpextancy
 :::
+
+## Installation des packages
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -173,13 +176,19 @@ df1 <- df1 %>% mutate(
 
 ## Exploration des données
 
-```{r}
+### Données manquantes
 
+```{r}
 # Données manquantes (pas de données manquantes dans df2)
 
 sum(is.na(df1$gdp_per_capita))
 sum(is.na(df1$ghg_per_capita))
 sum(is.na(df2))
+```
+
+### Espérance de vie par pays en 2022
+
+```{r}
 
 # Espérance de vie par pays en 2022  
 
@@ -189,7 +198,11 @@ life_country_2022 <- df2 %>%
     summarise(life_exp)
 
 datatable(life_country_2022, rownames = FALSE, colnames = c("Pays" = "country", 'Espérance de vie en 2022' = 'life_exp'))
+```
 
+### Âge moyen par continent par année
+
+```{r}
 # Âge moyen par continent par année
 
 mean_life_continent <- df2 %>% 
@@ -199,6 +212,12 @@ mean_life_continent <- df2 %>%
     )
 
 datatable(mean_life_continent, rownames = FALSE, colnames = c("Continent" = "continent", 'Espérance de vie moyenne' = 'mean_life_exp', "Année" = "year"))
+
+```
+
+### Moyenne et écart-type de l'espérance de vie dans le monde par année
+
+```{r}
 
 # Moyenne et écart-type de l'espérance de vie dans le monde par année 
 
@@ -210,6 +229,12 @@ mean_life_world <- df2 %>%
     )
 
 datatable(mean_life_world, rownames = FALSE, colnames = c('Espérance de vie moyenne dans le monde' = 'mean_life_exp', "Écart-type de l'espérance de vie entre les pays" = "sd_life", "Année" = "year"))
+
+```
+
+### Inégalités d'espérance de vie dans le monde
+
+```{r}
 
 # Pays avec l'espérance de vie la plus élevée au monde par année 
 
@@ -242,6 +267,12 @@ comp_life_exp <- comp_life_exp %>%
 
 datatable(comp_life_exp, rownames = FALSE, colnames = c("Année" = "year", "Pays à l'espérance de vie la plus élevée" = "max_country", "Espérance de vie la plus élevée" = "life_exp.y", "Pays à l'espérance de vie la plus faible" = "min_country", "Espérance de vie la plus faible" = "life_exp.x", "Écart" = "ecart"))
 
+```
+
+### Temps passé depuis qu'on observe l'espérance de vie par pays
+
+```{r}
+
 # Mettre la variable "year" en format "date" dans df2 
 
 df2$year_date <- as.Date(ISOdate(df2$year, 1, 1))
@@ -259,6 +290,11 @@ life_exp_since <- df2 %>%
     select(-year_date)
 
 datatable(life_exp_since, rownames = FALSE, colnames = c("Nombre de jours depuis la première observation" = "time_since", "Année de la première observation" = "year", "Espérance de vie" = "life_exp", "Continent" = "continent", "Pays" = "country"))
+```
+
+### Exporter les données
+
+```{r}
 
 # Exporter les données  
 
@@ -271,18 +307,27 @@ write_csv(life_exp_since, file = "./data/processed/life_exp_since.csv")
 
 ## Visualisation et analyse des données
 
-```{r}
+### Espérance de vie moyenne dans le monde 1800-2100
 
+```{r}
 # Espérance de vie moyenne dans le monde 1800-2100
 
 ggplot(data = mean_life_world) + 
   geom_smooth(mapping = aes(x = year, y = mean_life_exp))
+```
 
+### Espérance de vie par continent 1800-2100
+
+```{r}
 # Espérance de vie par continent 1800-2100
 
 ggplot(data = df2, mapping = aes(y = life_exp, x = year)) + 
   geom_smooth(mapping = aes(color = continent)) 
+```
 
+### Écart entre les pays à l'espérance de vie la plus élevée et la plus faibles 1800-2100
+
+```{r}
 # Écart entre les pays à l'espérance de vie la plus élevée et la plus faibles 1800-2100 
 
 ggplot(data = comp_life_exp) + 
@@ -290,6 +335,8 @@ ggplot(data = comp_life_exp) +
 
 
 ```
+
+### Combinaison des variables d'intérêt par année
 
 ```{r}
 
@@ -319,18 +366,33 @@ big_table_2020 <- big_table_year(annee = 2020)
 # Exporter les données pour 2015 
 
 write_csv(big_table_2015, file = "./data/processed/big_table_2015.csv")
+```
+
+### PIB/habitant et émissions de GES/habitant, 2015
+
+```{r}
 
 # Graphique montrant la relation entre le PIB/habitant et les émissions de GES/habitant 
 
 ggplot(data = big_table_2015, mapping = aes(x = gdp_per_capita, y = ghg_per_capita)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
+```
 
+### Émissions de GES/habitant et espérance de vie, 2015
+
+```{r}
 # Graphique montrant la relation entre les émissions de GES/habitant et l'espérance de vie
 
 ggplot(data = big_table_2015, mapping = aes(y = ghg_per_capita, x = life_exp)) + 
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
+
+```
+
+### PIB/habitant et espérance de vie, 2015
+
+```{r}
 
 # Graphique montrant la relation entre le PIB/habitant et l'espérance de vie 
 
@@ -340,16 +402,13 @@ ggplot(data = big_table_2015, mapping = aes(y = gdp_per_capita, x = life_exp)) +
 
 ```
 
+### Analyse
+
 Les graphiques qui précèdent semblent montrer des relations positives entre l'espérance de vie, le PIB/habitant, et les émissions de GES/habitant.
 
 On voit en effet une corrélation positive entre les émissions de GES/habitant et le PIB/habitant (0,68), l'espérance de vie et les émissions de GES/habitant (0,30), et l'espérance de vie et le PIB/habitant (0,60).
 
-Des régressions linéaires et l'utilisation du R carré semi-partiel (semi-partial R-squared) permettent de voir que, malgré la corrélation modérée entre l'espérance de vie et les émissions de GES/habitant, lorsque l'on contrôle pour l'effet du PIB/habitant, on se rend compte que les émissions de GES/habitant n'expliquent qu'une petite partie de la variation dans l'espérance de vie (R carré semi-partiel = 0,02).
-
-Ces résultats suggèrent que, si la croissance économique (mesurée en terme de PIB/habitant) peut être découplée des émissions de GES/habitant, elle peut continuer d'améliorer les conditions de vie (mesurées en terme d'espérance de vie) dans le monde sans nécessairement contribuer aux changements climatiques.
-
 ```{r}
-
 # Corrélation (Pearson) entre : 
 
 # 1. Les émissions de GES/habitant et le PIB/habitant 
@@ -369,6 +428,13 @@ cor_ghg_life
 cor_gdp_life <- cor.test(big_table_2015$gdp_per_capita, big_table_2015$life_exp, 
                     method = "pearson")
 cor_gdp_life
+```
+
+Des régressions linéaires et l'utilisation du R carré semi-partiel (semi-partial R-squared) permettent de voir que, malgré la corrélation modérée entre l'espérance de vie et les émissions de GES/habitant, lorsque l'on contrôle pour l'effet du PIB/habitant, on se rend compte que les émissions de GES/habitant n'expliquent qu'une petite partie de la variation dans l'espérance de vie (R carré semi-partiel = 0,02).
+
+Ces résultats suggèrent que, si la croissance économique (mesurée en terme de PIB/habitant) peut être découplée des émissions de GES/habitant, elle peut continuer d'améliorer les conditions de vie (mesurées en terme d'espérance de vie) dans le monde sans nécessairement contribuer aux changements climatiques.
+
+```{r}
 
 # Régressions linéaires simples entre :
 
