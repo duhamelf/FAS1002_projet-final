@@ -354,11 +354,6 @@ big_table_year <- function(annee) {
 
 # Il manque beaucoup de données dans df1 pour les années les plus récentes, donc nous procédons aux analyses avec l'année 2015 
 
-big_table_year(annee = 2000)
-big_table_year(annee = 2015)
-big_table_year(annee = 2020)
-
-big_table_2000 <- big_table_year(annee = 2000)
 big_table_2010 <- big_table_year(annee = 2010)
 big_table_2015 <- big_table_year(annee = 2015)
 big_table_2020 <- big_table_year(annee = 2020)
