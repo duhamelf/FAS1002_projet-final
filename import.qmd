@@ -25,30 +25,28 @@ citation: true
 bibliography: references.bib
 ---
 
-Il est maintenant le temps de décrire votre projet avant de passer au document suivant, soit l'importation et la manipulation des données.
-
-Je vous conseille d'écrire cette partie en dernier, une fois que vous aurez déjà vos résultats et figures afin d'éviter de réécrire cette page plusieurs fois.
+Description ...
 
 ::: callout-important
-N'oubliez pas d'inclure vos références sur chacune des pages!
+Les données proviennent entre autres de @owidenergy et de Gapminder.
 :::
-
-Par exemple:
-
-> Les données proviennent entre autres de @owidenergy.
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE}
 
+install.packages("scales", repos = "http://cran.us.r-project.org") 
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+library(tidyverse)
 library(countrycode)
 library(fs)
 library(lubridate)
-library(tidyverse)
 library(skimr)
 library(gapminder)
 library(knitr)
-install.packages("DT", repos = "http://cran.us.r-project.org")
 library(DT)
+install.packages("ggpubr", repos = "http://cran.us.r-project.org")
 ```
+
+## Importation des données
 
 ```{r download, cache=TRUE}
 
@@ -87,7 +85,6 @@ df1 <- read_csv(file = path(base_path, fname))
 ```{r}
 
 # Télécharger le deuxième ensemble de données une fois par mois 
-# pas cap de supprimer les données plus à jour wtf how???
 
 URL2 <- "https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx"
 
@@ -129,15 +126,9 @@ if (identical(x, character(0))) {
 
 df2 <- readxl::read_xlsx(path = fpath2, sheet = "data-for-countries-etc-by-year")
 
-
-
-#utiliser ça en attendant :  
-
-# download.file("https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx", destfile = "./data/raw/life_exp_data.xlsx")
-
-# df2 <-  readxl::read_xlsx("./data/raw/life_exp_data.xlsx", sheet = "data-for-countries-etc-by-year")
-
 ```
+
+## Manipulation des données
 
 ```{r}
 
@@ -180,13 +171,7 @@ df1 <- df1 %>% mutate(
 
 ```
 
-Vous pouvez, voire devriez, inclure plus d'éléments que ceux demandés ci-bas afin de produire un rapport plus exhaustif:
-
-○ Présenter un ou des beaux tableaux avec plusieurs variables d'intérêts en montrant les statistiques descriptives classiques (moyennes, écart-types, données manquantes, etc.). À vous de déterminer comment il est mieux de présenter les données globales.
-
-■ Conseil: vous avez vu ou lu comment calculer plusieurs statistiques en même temps.
-
-■ Présenter les mêmes tableaux en regroupant les données par continents.
+## Exploration des données
 
 ```{r}
 
@@ -281,7 +266,10 @@ write_csv(mean_life_continent, file = "./data/processed/mean_life_continent.csv"
 write_csv(mean_life_world, file = "./data/processed/mean_life_world.csv")
 write_csv(comp_life_exp, file = "./data/processed/comp_life_exp.csv")
 write_csv(life_exp_since, file = "./data/processed/life_exp_since.csv")
+
 ```
+
+## Visualisation et analyse des données
 
 ```{r}
 
@@ -302,8 +290,6 @@ ggplot(data = comp_life_exp) +
 
 
 ```
-
-1.  Pour l'**analyse** des données de vos données, vous devrez en effectuer deux et décrire les motivations de ces analyses et vos résultats. Les analyses ne sont pas obligées d'être hyper sophistiquées, mais le processus et l'interprétation des résultats doivent se retrouver dans votre document. Il y a énormément de possibilités dans toutes les variables que vous avez. Comme il ne s'agit pas d'un cours de statistiques, la correction sera moins sévère à ce niveau. Tâchez tout de même de démontrer une rigueur peu importe votre niveau de connaissances! Tentez d'expliquer vos résultats en décrivant ce qui peut les influencer, les forces et faiblesses, etc.
 
 ```{r}
 
@@ -346,7 +332,7 @@ ggplot(data = big_table_2015, mapping = aes(y = ghg_per_capita, x = life_exp)) +
   geom_point(mapping = aes(color = continent)) + 
   geom_smooth()
 
-# Graphique montrant la relation entre le PIB/habitant et l'espérance de vie plot 
+# Graphique montrant la relation entre le PIB/habitant et l'espérance de vie 
 
 ggplot(data = big_table_2015, mapping = aes(y = gdp_per_capita, x = life_exp)) + 
   geom_point(mapping = aes(color = continent)) + 
@@ -354,7 +340,35 @@ ggplot(data = big_table_2015, mapping = aes(y = gdp_per_capita, x = life_exp)) +
 
 ```
 
+Les graphiques qui précèdent semblent montrer des relations positives entre l'espérance de vie, le PIB/habitant, et les émissions de GES/habitant.
+
+On voit en effet une corrélation positive entre les émissions de GES/habitant et le PIB/habitant (0,68), l'espérance de vie et les émissions de GES/habitant (0,30), et l'espérance de vie et le PIB/habitant (0,60).
+
+Des régressions linéaires et l'utilisation du R carré semi-partiel (semi-partial R-squared) permettent de voir que, malgré la corrélation modérée entre l'espérance de vie et les émissions de GES/habitant, lorsque l'on contrôle pour l'effet du PIB/habitant, on se rend compte que les émissions de GES/habitant n'expliquent qu'une petite partie de la variation dans l'espérance de vie (R carré semi-partiel = 0,02).
+
+Ces résultats suggèrent que, si la croissance économique (mesurée en terme de PIB/habitant) peut être découplée des émissions de GES/habitant, elle peut continuer d'améliorer les conditions de vie (mesurées en terme d'espérance de vie) dans le monde sans nécessairement contribuer aux changements climatiques.
+
 ```{r}
+
+# Corrélation (Pearson) entre : 
+
+# 1. Les émissions de GES/habitant et le PIB/habitant 
+
+cor_ghg_gdp <- cor.test(big_table_2015$ghg_per_capita, big_table_2015$gdp_per_capita, 
+                    method = "pearson")
+cor_ghg_gdp
+
+# 2. L'espérance de vie et les émissions de GES/habitant 
+
+cor_ghg_life <- cor.test(big_table_2015$ghg_per_capita, big_table_2015$life_exp, 
+                    method = "pearson")
+cor_ghg_life
+
+# 3. L'espérance de vie et le PIB/habitant 
+
+cor_gdp_life <- cor.test(big_table_2015$gdp_per_capita, big_table_2015$life_exp, 
+                    method = "pearson")
+cor_gdp_life
 
 # Régressions linéaires simples entre :
 
@@ -369,6 +383,8 @@ confint(fit_ghg_gdp)
 fit_ghg_life <- lm(life_exp~ghg_per_capita, data = big_table_2015)
 summary(fit_ghg_life)
 confint(fit_ghg_life)
+
+# 3. L'espérance de vie et le PIB/habitant 
 
 fit_gdp_life <- lm(life_exp~gdp_per_capita, data = big_table_2015)
 summary(fit_gdp_life)
