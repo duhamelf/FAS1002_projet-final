@@ -106,21 +106,21 @@ y <- as_date(y)
 
 if (identical(x, character(0))) {
     download.file(url = URL2, 
-              destfile = fpath) 
+              destfile = fpath2) 
         paste("Le fichier",
-          fpath,
+          fpath2,
           "n'existait pas, il a donc été téléchargé à l'instant.")
   } else if (lubridate::month(y) != lubridate::month(today())) {
           unlink(x)
           download.file(url = URL2, 
-                        destfile = fpath) 
+                        destfile = fpath2) 
           print(paste("Le fichier",
-                    fpath,
+                    fpath2,
                     "n'existait pas, il a donc été téléchargé à l'instant.")
     )
   } else {
       print(paste("Le fichier",
-                fpath,
+                fpath2,
                 "existe déjà, il ne sera pas téléchargé à nouveau.")
       )
   }
@@ -129,7 +129,13 @@ if (identical(x, character(0))) {
 
 df2 <- readxl::read_xlsx(path = fpath2, sheet = "data-for-countries-etc-by-year")
 
-## ne fonctionne plus cette dernière partie whyyyyy??? 
+
+
+#utiliser ça en attendant :  
+
+# download.file("https://docs.google.com/spreadsheets/d/1RheSon1-q4vFc3AGyupVPH6ptEByE-VtnjOCselU0PE/export?format=xlsx", destfile = "./data/raw/life_exp_data.xlsx")
+
+# df2 <-  readxl::read_xlsx("./data/raw/life_exp_data.xlsx", sheet = "data-for-countries-etc-by-year")
 
 ```
 
